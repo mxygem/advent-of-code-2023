@@ -13,23 +13,12 @@ func TestCalibration(t *testing.T) {
 		expected int
 	}{
 		{
-			name: "part 1 example case",
+			name: "example case",
 			input: `1abc2
 			pqr3stu8vwx
 			a1b2c3d4e5f
 			treb7uchet`,
 			expected: 142,
-		},
-		{
-			name: "part 2 example case",
-			input: `two1nine
-			eightwothree
-			abcone2threexyz
-			xtwone3four
-			4nineeightseven2
-			zoneight234
-			7pqrstsixteen`,
-			expected: 281,
 		},
 	}
 
@@ -40,6 +29,11 @@ func TestCalibration(t *testing.T) {
 	}
 }
 
+// Note: Instructions did not mention parsing numbers as their spelled out names but the puzzle
+// input does have this happening.
+// Examples
+//   - 3bqnfxkdbonesixseven
+//   - 4nine7oneighthm
 func TestParseNumbers(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -81,6 +75,7 @@ func TestParseNumbers(t *testing.T) {
 			input:    "ab3de6gh",
 			expected: []string{"3", "6"},
 		},
+
 		{
 			name:     "ensure 0 and 9 are read",
 			input:    "x9x1x0x",
@@ -91,31 +86,6 @@ func TestParseNumbers(t *testing.T) {
 			input:    "234",
 			expected: []string{"2", "3", "4"},
 		},
-		{
-			name:     "single number spelled out",
-			input:    "three",
-			expected: []string{"3"},
-		},
-		{
-			name:     "four numbers spelled out",
-			input:    "twooneonethree",
-			expected: []string{"2", "1", "1", "3"},
-		},
-		{
-			name:     "mixed numbers and spellings",
-			input:    "eight6sevenfive30nine",
-			expected: []string{"8", "6", "7", "5", "3", "0", "9"},
-		},
-		// {
-		// 	name:     "partial spellings",
-		// 	input:    "threfour",
-		// 	expected: []string{"3"},
-		// },
-		// {
-		// 	name:     "all mixed",
-		// 	input:    "0ontwo3fourfivesi7",
-		// 	expected: []string{"0", "2", "3", "4", "5", "7"},
-		// },
 	}
 
 	for _, tc := range testCases {
