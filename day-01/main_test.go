@@ -106,16 +106,26 @@ func TestParseNumbers(t *testing.T) {
 			input:    "eight6sevenfive30nine",
 			expected: []string{"8", "6", "7", "5", "3", "0", "9"},
 		},
-		// {
-		// 	name:     "partial spellings",
-		// 	input:    "threfour",
-		// 	expected: []string{"3"},
-		// },
-		// {
-		// 	name:     "all mixed",
-		// 	input:    "0ontwo3fourfivesi7",
-		// 	expected: []string{"0", "2", "3", "4", "5", "7"},
-		// },
+		{
+			name:     "partial spellings",
+			input:    "threfour",
+			expected: []string{"4"},
+		},
+		{
+			name:     "all mixed",
+			input:    "0ontwo3fourfivesi7",
+			expected: []string{"0", "2", "3", "4", "5", "7"},
+		},
+		{
+			name:     "puzzle input #1",
+			input:    "sevenntgvnrrqfvxh2ttnkgffour8fiveone",
+			expected: []string{"7", "2", "4", "8", "5", "1"},
+		},
+		{
+			name:     "overlapping numbers",
+			input:    "twonexxthreeight",
+			expected: []string{"2", "1", "3", "8"},
+		},
 	}
 
 	for _, tc := range testCases {

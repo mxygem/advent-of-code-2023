@@ -16,17 +16,17 @@ const (
 )
 
 var (
-	numSpellings = map[string]string{
-		"zero":  "0",
-		"one":   "1",
-		"two":   "2",
-		"three": "3",
-		"four":  "4",
-		"five":  "5",
-		"six":   "6",
-		"seven": "7",
-		"eight": "8",
-		"nine":  "9",
+	numSpellings = []map[string]string{
+		{"zero": "0"},
+		{"one": "1"},
+		{"two": "2"},
+		{"three": "3"},
+		{"four": "4"},
+		{"five": "5"},
+		{"six": "6"},
+		{"seven": "7"},
+		{"eight": "8"},
+		{"nine": "9"},
 	}
 )
 
@@ -75,41 +75,27 @@ func parseNumbers(input string) []string {
 	}
 
 	var nums []string
-	wordPos := -1
 	for i := 0; i < len(line); i++ {
-		if i >= 9 {
-			fmt.Println("breaking here")
-		}
-
 		if line[i] >= _zeroRune && line[i] <= _nineRune {
 			// if we find a digit, add it
 			nums = append(nums, string(line[i]))
-			// and reset any word tracking
-			wordPos = -1
 			continue
 		}
 
-		// start tracking a potentially spelled word
-		if wordPos < 0 {
-			wordPos = i
-			continue
-		}
+		// check for spelled numbers
+		for _, ns := range numSpellings {
+			for k, v := range ns {
+				if !strings.HasPrefix(input[i:], k) {
+					break
+				}
 
-		end := i + 1
-		if end > len(line)-1 {
-			end = len(line)
+				nums = append(nums, v)
+				// some spelled numbers overlap so setting index back by two
+				// moves us back one back from the end of the found spelling
+				// examples: twone & threeight
+				i += len(k) - 2
+			}
 		}
-
-		maybeSpelling := line[wordPos:end]
-		num, ok := numSpellings[maybeSpelling]
-		if ok {
-			// if matched, add the match and reset word pos
-			nums = append(nums, num)
-			wordPos = -1
-			continue
-		}
-
-		fmt.Printf("no match: %q\n", maybeSpelling)
 	}
 
 	if len(nums) == 0 {
