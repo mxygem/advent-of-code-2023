@@ -55,7 +55,7 @@ func parseGames(in string) (int, error) {
 	}
 
 	inputScanner := bufio.NewScanner(strings.NewReader(in))
-	var idTotal int
+	var powerSum int
 	var errs []error
 
 	for inputScanner.Scan() {
@@ -65,13 +65,7 @@ func parseGames(in string) (int, error) {
 			continue
 		}
 
-		// determine possible game here
-		max := set{red: _redMax, blue: _blueMax, green: _greenMax}
-		if !possibleGame(max, game) {
-			continue
-		}
-
-		idTotal += game.id
+		powerSum += minimumGamePower(game)
 	}
 
 	if len(errs) > 0 {
@@ -81,7 +75,7 @@ func parseGames(in string) (int, error) {
 		}
 	}
 
-	return idTotal, nil
+	return powerSum, nil
 }
 
 func parseGame(in string) (*game, error) {
@@ -188,24 +182,30 @@ func possibleGame(totals set, check *game) bool {
 		return false
 	}
 
-	fmt.Printf("----- game %d -----\n", check.id)
-
-	// var redTotal, blueTotal, greenTotal int
-	for i, s := range check.sets {
-		fmt.Printf("\tset %d:%+v\n", i, s)
+	for _, s := range check.sets {
 		if s.red > totals.red || s.blue > totals.blue || s.green > totals.green {
-			// fmt.Printf("\tsingle value too high - r:%d:%d, b:%d:%d, g:%d:%d\n", s.red, totals.red, s.blue, totals.blue, s.green, totals.green)
 			return false
 		}
-		// redTotal += s.red
-		// blueTotal += s.blue
-		// greenTotal += s.green
 	}
 
-	// if redTotal > totals.red || blueTotal > totals.blue || greenTotal > totals.green {
-	// 	fmt.Printf("\tgame total too high: - r:%d:%d, b:%d:%d, g:%d:%d\n", redTotal, totals.red, blueTotal, totals.blue, greenTotal, totals.green)
-	// 	return false
-	// }
-
 	return true
+}
+
+func minimumGamePower(g *game) int {
+	var red, blue, green int
+	for _, s := range g.sets {
+		if s.red > red {
+			red = s.red
+		}
+
+		if s.blue > blue {
+			blue = s.blue
+		}
+
+		if s.green > green {
+			green = s.green
+		}
+	}
+
+	return red * blue * green
 }
