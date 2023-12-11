@@ -6,29 +6,58 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPartNumberPositions(t *testing.T) {
+func TestPartNumberSum(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected int
+	}{
+		{
+			name: "no part numbers",
+			input: `....#..987
+			123.#.....
+			....#.3...`,
+			expected: 0,
+		},
+		{
+			name: "four part numbers",
+			input: `....10....
+			..10##10..
+			....10....`,
+			expected: 40,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, partNumberSum(tc.input))
+		})
+	}
+}
+
+func TestNumberPositions(t *testing.T) {
 	testCases := []struct {
 		name     string
 		lines    []string
 		expected [][][]int
 	}{
-		// {
-		// 	name:     "no input",
-		// 	lines:    nil,
-		// 	expected: nil,
-		// },
-		// {
-		// 	name:     "no lines",
-		// 	lines:    []string{},
-		// 	expected: nil,
-		// },
-		// {
-		// 	name: "single line, no numbers",
-		// 	lines: []string{
-		// 		`..........`,
-		// 	},
-		// 	expected: [][][]int{nil},
-		// },
+		{
+			name:     "no input",
+			lines:    nil,
+			expected: nil,
+		},
+		{
+			name:     "no lines",
+			lines:    []string{},
+			expected: nil,
+		},
+		{
+			name: "single line, no numbers",
+			lines: []string{
+				`..........`,
+			},
+			expected: [][][]int{nil},
+		},
 		{
 			name: "single line, with two numbers",
 			lines: []string{
@@ -61,7 +90,7 @@ func TestPartNumberPositions(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, partNumberPositions(tc.lines))
+			assert.Equal(t, tc.expected, numberPositions(tc.lines))
 		})
 	}
 }
@@ -117,96 +146,96 @@ func TestIsPartNumber(t *testing.T) {
 		pos      []int
 		expected bool
 	}{
-		// {
-		// 	name: "line number greater than lines",
-		// 	lines: []string{
-		// 		"..........",
-		// 		"..........",
-		// 	},
-		// 	lineNum:  2,
-		// 	expected: false,
-		// },
-		// {
-		// 	name:     "start less than 0",
-		// 	pos:      []int{-1, 4},
-		// 	expected: false,
-		// },
-		// {
-		// 	name: "end greater than line length",
-		// 	lines: []string{
-		// 		"..........",
-		// 	},
-		// 	pos:      []int{5, 200},
-		// 	expected: false,
-		// },
-		// {
-		// 	name: "middle area part number via prev row start diag",
-		// 	lines: []string{
-		// 		".....*....",
-		// 		"......33..",
-		// 		"..........",
-		// 	},
-		// 	lineNum:  1,
-		// 	pos:      []int{7, 8},
-		// 	expected: true,
-		// },
-		// {
-		// 	name: "middle area number number via prev row end diag",
-		// 	lines: []string{
-		// 		"........!.",
-		// 		"......33..",
-		// 		"..........",
-		// 	},
-		// 	lineNum:  1,
-		// 	pos:      []int{7, 8},
-		// 	expected: true,
-		// },
-		// {
-		// 	name: "middle area number number via same row before num",
-		// 	lines: []string{
-		// 		"..........",
-		// 		".....$33..",
-		// 		"..........",
-		// 	},
-		// 	lineNum:  1,
-		// 	pos:      []int{7, 8},
-		// 	expected: true,
-		// },
-		// {
-		// 	name: "middle area number number via same row after num",
-		// 	lines: []string{
-		// 		"..........",
-		// 		"..23(.....",
-		// 		"..........",
-		// 	},
-		// 	lineNum:  1,
-		// 	pos:      []int{2, 3},
-		// 	expected: true,
-		// },
-		// {
-		// 	name: "middle area number number next row start diag",
-		// 	lines: []string{
-		// 		".#........",
-		// 		"..23......",
-		// 		"..........",
-		// 	},
-		// 	lineNum:  1,
-		// 	pos:      []int{2, 3},
-		// 	expected: true,
-		// },
-		// {
-		// 	name: "middle area number number next row start diag",
-		// 	lines: []string{
-		// 		"..........",
-		// 		"..23......",
-		// 		".%........",
-		// 	},
-		// 	lineNum:  1,
-		// 	pos:      []int{2, 3},
-		// 	expected: true,
-		// },
 		{
-			name: "middle area number number next row end diag",
+			name: "line number greater than lines",
+			lines: []string{
+				"..........",
+				"..........",
+			},
+			lineNum:  2,
+			expected: false,
+		},
+		{
+			name:     "start less than 0",
+			pos:      []int{-1, 4},
+			expected: false,
+		},
+		{
+			name: "end greater than line length",
+			lines: []string{
+				"..........",
+			},
+			pos:      []int{5, 200},
+			expected: false,
+		},
+		{
+			name: "middle area part number via prev row start diag",
+			lines: []string{
+				".....*....",
+				"......33..",
+				"..........",
+			},
+			lineNum:  1,
+			pos:      []int{6, 7},
+			expected: true,
+		},
+		{
+			name: "middle area number via prev row end diag",
+			lines: []string{
+				"........!.",
+				"......33..",
+				"..........",
+			},
+			lineNum:  1,
+			pos:      []int{6, 7},
+			expected: true,
+		},
+		{
+			name: "middle area number via same row before num",
+			lines: []string{
+				"..........",
+				".....$33..",
+				"..........",
+			},
+			lineNum:  1,
+			pos:      []int{6, 7},
+			expected: true,
+		},
+		{
+			name: "middle area number via same row after num",
+			lines: []string{
+				"..........",
+				"..23(.....",
+				"..........",
+			},
+			lineNum:  1,
+			pos:      []int{2, 3},
+			expected: true,
+		},
+		{
+			name: "middle area number next row start diag",
+			lines: []string{
+				".#........",
+				"..23......",
+				"..........",
+			},
+			lineNum:  1,
+			pos:      []int{2, 3},
+			expected: true,
+		},
+		{
+			name: "middle area number next row start diag",
+			lines: []string{
+				"..........",
+				"..23......",
+				".%........",
+			},
+			lineNum:  1,
+			pos:      []int{2, 3},
+			expected: true,
+		},
+		{
+			name: "middle area number next row end diag",
 			lines: []string{
 				"..........",
 				"..23......",
@@ -257,6 +286,26 @@ func TestIsPartNumber(t *testing.T) {
 			expected: true,
 		},
 		{
+			name: "first line next row start diag",
+			lines: []string{
+				"...123....",
+				"..).......",
+			},
+			lineNum:  0,
+			pos:      []int{3, 5},
+			expected: true,
+		},
+		{
+			name: "first line next row after diag",
+			lines: []string{
+				"...123....",
+				"......_...",
+			},
+			lineNum:  0,
+			pos:      []int{3, 5},
+			expected: true,
+		},
+		{
 			name: "end line mid number symbol after",
 			lines: []string{
 				"..........",
@@ -264,8 +313,54 @@ func TestIsPartNumber(t *testing.T) {
 				"....4123(.",
 			},
 			lineNum:  2,
-			pos:      []int{5, 8},
+			pos:      []int{4, 7},
 			expected: true,
+		},
+		{
+			name: "end line mid number symbol after",
+			lines: []string{
+				"..........",
+				"^.........",
+				".9874123..",
+			},
+			lineNum:  2,
+			pos:      []int{1, 7},
+			expected: true,
+		},
+		{
+			name: "end line mid number symbol after",
+			lines: []string{
+				"..........",
+				"........~.",
+				".9874123..",
+			},
+			lineNum:  2,
+			pos:      []int{1, 7},
+			expected: true,
+		},
+		{
+			name: "not part number symbols all around with one gap",
+			lines: []string{
+				"&&&&&&&&&&",
+				"~~......@@",
+				"!!.1111.##",
+				"$$......^^",
+				"**********",
+			},
+			lineNum:  2,
+			pos:      []int{3, 6},
+			expected: false,
+		},
+		{
+			name: "not part number at start of line",
+			lines: []string{
+				"..........",
+				"1111.@@@##",
+				"..........",
+			},
+			lineNum:  1,
+			pos:      []int{0, 3},
+			expected: false,
 		},
 	}
 
@@ -281,3 +376,69 @@ func TestIsPartNumber(t *testing.T) {
 		})
 	}
 }
+
+func TestPartNumbers(t *testing.T) {
+	testCases := []struct {
+		name      string
+		lines     []string
+		positions [][][]int
+		expected  []int
+	}{
+		{
+			name: "no part numbers",
+			lines: []string{
+				"123....456",
+				"....@@....",
+				"789....321",
+			},
+			positions: [][][]int{
+				{{0, 2}, {7, 9}},
+				{},
+				{{0, 2}, {7, 9}},
+			},
+			expected: nil,
+		},
+		{
+			name: "four part numbers",
+			lines: []string{
+				"....10....",
+				"..10##10..",
+				"....10....",
+			},
+			positions: [][][]int{
+				{{4, 5}},
+				{{2, 3}, {6, 7}},
+				{{4, 5}},
+			},
+			expected: []int{10, 10, 10, 10},
+		},
+		{
+			name: "one part number",
+			lines: []string{
+				"....44*...",
+			},
+			positions: [][][]int{
+				{{4, 5}},
+			},
+			expected: []int{44},
+		},
+		{
+			name: "pos points to letters",
+			lines: []string{
+				"....ab*...",
+			},
+			positions: [][][]int{
+				{{4, 5}},
+			},
+			expected: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, partNumbers(tc.lines, tc.positions))
+		})
+	}
+}
+
+// todo, check for letters being erroneously found?

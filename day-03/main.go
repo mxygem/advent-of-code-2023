@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -24,28 +25,26 @@ func main() {
 		log.Fatalf("opening file: %s", err)
 	}
 
-	_ = partNumberSum(string(f))
+	sum := partNumberSum(string(f))
+
+	fmt.Printf("Part number total: %d\n", sum)
 }
 
 func partNumberSum(in string) int {
 	inputScanner := bufio.NewScanner(strings.NewReader(in))
-	var partNumberSum int
 
 	var lines []string
 	for inputScanner.Scan() {
-		lines = append(lines, inputScanner.Text())
+		lines = append(lines, strings.TrimSpace(inputScanner.Text()))
 	}
 
-	numberPositions := partNumberPositions(lines)
-	fmt.Printf("read %d lines and found %d lines of numbers\n", len(lines), len(numberPositions))
-	for i, l := range numberPositions {
-		fmt.Printf("line: %d\n\t%s\n\t%+v\n", i, lines[i], l)
-	}
+	numberPositions := numberPositions(lines)
+	partNumbers := partNumbers(lines, numberPositions)
 
-	return partNumberSum
+	return sum(partNumbers)
 }
 
-func partNumberPositions(lines []string) [][][]int {
+func numberPositions(lines []string) [][][]int {
 	if len(lines) == 0 {
 		return nil
 	}
@@ -101,26 +100,21 @@ func isPartNumber(lines []string, lineNum int, start, end int) bool {
 		return false
 	}
 
-	//check previous line
 	line := lines[lineNum]
 
-	// setup positions -1 and +1 from number to check
+	// setup positions to index behavior and diags
 	cs := start - 1
 	if cs < 0 {
 		cs = 0
 	}
 
-	ce := end + 1
+	ce := end + 2
 	if ce >= len(line) {
-		ce = len(line) - 1
+		ce = len(line)
 	}
 
-	// check previous line
+	// check previous line if not first
 	if lineNum > 0 {
-		cs--
-		if cs < 0 {
-			cs = 0
-		}
 		for _, c := range lines[lineNum-1][cs:ce] {
 			if c != 46 && (c < 48 || c > 58) {
 				return true
@@ -128,22 +122,15 @@ func isPartNumber(lines []string, lineNum int, start, end int) bool {
 		}
 	}
 
-	// check same row before and after
-	fmt.Printf("same row cs: %d ce: %d\n", cs, ce)
-	fmt.Printf("line[cs]: %d:%s line[ce]: %d:%s\n", line[cs], string(line[cs]), line[ce], string(line[ce]))
-	if (line[cs] != 46 && (line[cs] < 48 || line[cs] > 58)) || (line[ce] != 46 && (line[ce] < 48 || line[ce] > 58)) {
-		return true
+	// check same line
+	for _, c := range line[cs:ce] {
+		if c != 46 && (c < 48 || c > 58) {
+			return true
+		}
 	}
 
 	// check next row if not last
-	// check previous line
-	fmt.Printf("lineNum: %d len(lines)-1: %d\n", lineNum, len(lines)-1)
 	if lineNum < len(lines)-1 {
-		ce++
-		if ce >= len(line) {
-			ce = len(line) - 1
-		}
-
 		for _, c := range lines[lineNum+1][cs:ce] {
 			if c != 46 && (c < 48 || c > 58) {
 				return true
@@ -152,4 +139,34 @@ func isPartNumber(lines []string, lineNum int, start, end int) bool {
 	}
 
 	return false
+}
+
+func partNumbers(lines []string, positions [][][]int) []int {
+	var pns []int
+
+	for i, linePositions := range positions {
+		for _, pos := range linePositions {
+			if !isPartNumber(lines, i, pos[0], pos[1]) {
+				continue
+			}
+
+			n, err := strconv.Atoi(lines[i][pos[0] : pos[1]+1])
+			if err != nil {
+				fmt.Printf("WARN - could not convert %q to int: %v\n", lines[i][pos[0]:pos[1]+1], err)
+				continue
+			}
+
+			pns = append(pns, n)
+		}
+	}
+
+	return pns
+}
+
+func sum(pns []int) int {
+	var sum int
+	for _, pn := range pns {
+		sum += pn
+	}
+	return sum
 }
