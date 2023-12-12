@@ -38,20 +38,35 @@ func partNumberSum(in string) int {
 		lines = append(lines, strings.TrimSpace(inputScanner.Text()))
 	}
 
-	numberPositions := numberPositions(lines)
-	partNumbers := partNumbers(lines, numberPositions)
+	allParts := parts(lines)
+	gears := gears(allParts)
 
-	return sum(partNumbers)
+	return calc(gears)
 }
 
-func numberPositions(lines []string) [][][]int {
+type part struct {
+	val int
+	pos
+	symbol *symbol
+}
+
+type symbol struct {
+	kind string
+	pos
+}
+
+type pos struct {
+	line       int
+	start, end int
+}
+
+func parts(lines []string) []*part {
 	if len(lines) == 0 {
 		return nil
 	}
 
-	allLines := make([][][]int, 0, len(lines))
-	for _, line := range lines {
-		var nums [][]int
+	var posParts []*part
+	for lp, line := range lines {
 		for i := 0; i < len(line); i++ {
 			start, end := numberPos(line[i:])
 			// no numbers found
@@ -59,14 +74,31 @@ func numberPositions(lines []string) [][][]int {
 				break
 			}
 
-			nums = append(nums, []int{start + i, end + i})
+			num, err := strconv.Atoi(line[start+i : end+i+1])
+			if err != nil {
+				continue
+			}
+
+			posPart := &part{
+				val: num,
+				pos: pos{
+					line:  lp,
+					start: start + i,
+					end:   end + i,
+				},
+			}
+
+			p, ok := isPartNumber(lines, posPart)
+			if !ok {
+				continue
+			}
+
+			posParts = append(posParts, p)
 			i = end + i
 		}
-
-		allLines = append(allLines, nums)
 	}
 
-	return allLines
+	return posParts
 }
 
 func numberPos(line string) (int, int) {
@@ -95,78 +127,138 @@ func numberPos(line string) (int, int) {
 	return start, len(line) - 1
 }
 
-func isPartNumber(lines []string, lineNum int, start, end int) bool {
-	if lineNum >= len(lines) || start < 0 || end > len(lines[lineNum]) {
-		return false
+func isPartNumber(lines []string, possPart *part) (*part, bool) {
+	if possPart == nil {
+		return nil, false
+	}
+	if possPart.line >= len(lines) || possPart.start < 0 || possPart.end > len(lines[possPart.line]) {
+		return nil, false
 	}
 
-	line := lines[lineNum]
+	pp := *possPart
+	line := lines[pp.line]
 
 	// setup positions to index behavior and diags
-	cs := start - 1
+	cs := pp.start - 1
 	if cs < 0 {
 		cs = 0
 	}
 
-	ce := end + 2
+	ce := pp.end + 2
 	if ce >= len(line) {
 		ce = len(line)
 	}
 
 	// check previous line if not first
-	if lineNum > 0 {
-		for _, c := range lines[lineNum-1][cs:ce] {
+	if pp.line > 0 {
+		for i, c := range lines[pp.line-1][cs:ce] {
 			if c != 46 && (c < 48 || c > 58) {
-				return true
+				pp.symbol = &symbol{
+					kind: string(c),
+					pos: pos{
+						line:  pp.line - 1,
+						start: cs + i,
+					},
+				}
+
+				return &pp, true
 			}
 		}
 	}
 
 	// check same line
-	for _, c := range line[cs:ce] {
+	for i, c := range line[cs:ce] {
 		if c != 46 && (c < 48 || c > 58) {
-			return true
+			pp.symbol = &symbol{
+				kind: string(c),
+				pos: pos{
+					line:  pp.line,
+					start: cs + i,
+				},
+			}
+
+			return &pp, true
 		}
 	}
 
 	// check next row if not last
-	if lineNum < len(lines)-1 {
-		for _, c := range lines[lineNum+1][cs:ce] {
+	if pp.line < len(lines)-1 {
+		for i, c := range lines[pp.line+1][cs:ce] {
 			if c != 46 && (c < 48 || c > 58) {
-				return true
+				pp.symbol = &symbol{
+					kind: string(c),
+					pos: pos{
+						line:  pp.line + 1,
+						start: cs + i,
+					},
+				}
+
+				return &pp, true
 			}
 		}
 	}
 
-	return false
+	return nil, false
 }
 
-func partNumbers(lines []string, positions [][][]int) []int {
-	var pns []int
+func gears(parts []*part) []*part {
+	var gs []*part
+	fs := map[pos]int{}
 
-	for i, linePositions := range positions {
-		for _, pos := range linePositions {
-			if !isPartNumber(lines, i, pos[0], pos[1]) {
+	for _, p := range parts {
+		if p.symbol == nil || p.symbol.kind != "*" {
+			continue
+		}
+
+		for _, pg := range parts {
+			if p == pg {
 				continue
 			}
 
-			n, err := strconv.Atoi(lines[i][pos[0] : pos[1]+1])
-			if err != nil {
-				fmt.Printf("WARN - could not convert %q to int: %v\n", lines[i][pos[0]:pos[1]+1], err)
+			if pg.symbol.kind != "*" ||
+				p.symbol.kind != pg.symbol.kind ||
+				p.symbol.line != pg.symbol.line ||
+				p.symbol.pos.start != pg.symbol.pos.start {
 				continue
 			}
 
-			pns = append(pns, n)
+			if fs[p.symbol.pos] == 0 {
+				gs = append(gs, p, pg)
+			}
+			fs[p.symbol.pos]++
 		}
 	}
 
-	return pns
+	// remove invalid matches
+	var dd []*part
+	for k, f := range fs {
+		if f > 2 {
+			continue
+		}
+
+		for _, p := range gs {
+			if p.symbol.line != k.line || p.symbol.pos.start != k.start {
+				continue
+			}
+
+			dd = append(dd, p)
+		}
+	}
+	if len(dd) == 0 {
+		return nil
+	}
+
+	return dd
 }
 
-func sum(pns []int) int {
+func calc(ps []*part) int {
 	var sum int
-	for _, pn := range pns {
-		sum += pn
+	for i, p := range ps {
+		if i == 0 || i%2 == 0 {
+			continue
+		}
+
+		sum += p.val * ps[i-1].val
 	}
 	return sum
 }
